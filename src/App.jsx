@@ -83,17 +83,33 @@ function App() {
     if (view === 'month') {
       const dayClasses = classes.filter(cls => isSameDay(cls.date, date))
       if (dayClasses.length > 0) {
-        const paidCount = dayClasses.filter(cls => cls.paymentStatus === 'paid').length
-        const pendingCount = dayClasses.filter(cls => cls.paymentStatus === 'pending').length
-        const unpaidCount = dayClasses.filter(cls => cls.paymentStatus === 'unpaid').length
+        // Sort by time
+        const sortedClasses = [...dayClasses].sort((a, b) =>
+          a.startTime.localeCompare(b.startTime)
+        )
+
+        // Show up to 3 students, then "+N more"
+        const displayClasses = sortedClasses.slice(0, 3)
+        const remaining = sortedClasses.length - 3
 
         return (
           <div className="calendar-tile-content">
-            <div className="class-count">{dayClasses.length}</div>
-            <div className="payment-indicators">
-              {paidCount > 0 && <span className="payment-dot paid" title={`${paidCount} paid`}></span>}
-              {pendingCount > 0 && <span className="payment-dot pending" title={`${pendingCount} pending`}></span>}
-              {unpaidCount > 0 && <span className="payment-dot unpaid" title={`${unpaidCount} unpaid`}></span>}
+            <div className="student-bubbles">
+              {displayClasses.map((cls) => (
+                <div
+                  key={cls.id}
+                  className={`student-bubble ${cls.paymentStatus}`}
+                  title={`${cls.studentName} - ${cls.subject} (${cls.startTime}) - ${cls.paymentStatus}`}
+                >
+                  <span className="bubble-time">{cls.startTime.slice(0, 5)}</span>
+                  <span className="bubble-name">{cls.studentName.split(' ')[0]}</span>
+                </div>
+              ))}
+              {remaining > 0 && (
+                <div className="student-bubble more">
+                  +{remaining} more
+                </div>
+              )}
             </div>
           </div>
         )
@@ -166,6 +182,20 @@ function App() {
 
       <div className="main-content">
         <div className="calendar-section">
+          <div className="legend">
+            <div className="legend-item">
+              <span className="legend-dot paid"></span>
+              <span>Paid</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-dot pending"></span>
+              <span>Pending</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-dot unpaid"></span>
+              <span>Unpaid</span>
+            </div>
+          </div>
           <Calendar
             onChange={setSelectedDate}
             value={selectedDate}
@@ -175,7 +205,19 @@ function App() {
         </div>
 
         <div className="classes-section">
-          <h2>{format(selectedDate, 'MMMM d, yyyy')}</h2>
+          <div className="section-header">
+            <h2>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</h2>
+            <button
+              className="btn btn-add-small"
+              onClick={() => {
+                setEditingClass(null)
+                setShowForm(true)
+              }}
+              title="Add class to this day"
+            >
+              + Add
+            </button>
+          </div>
           {selectedDayClasses.length > 0 ? (
             <DayClasses
               classes={selectedDayClasses}
