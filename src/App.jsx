@@ -38,15 +38,22 @@ function App() {
     }
   }, [classes])
 
-  const handleAddClass = (classData) => {
+  const handleAddClass = (classData, isMultiple = false) => {
     if (editingClass) {
       // Update existing class
       setClasses(classes.map(cls =>
         cls.id === editingClass.id ? { ...classData, id: editingClass.id } : cls
       ))
       setEditingClass(null)
+    } else if (isMultiple && Array.isArray(classData)) {
+      // Add multiple classes at once
+      const newClasses = classData.map((cls, index) => ({
+        ...cls,
+        id: `${Date.now()}-${index}`
+      }))
+      setClasses([...classes, ...newClasses])
     } else {
-      // Add new class
+      // Add single new class
       const newClass = {
         ...classData,
         id: Date.now().toString()
